@@ -115,17 +115,17 @@ class ThickenerData(SeparatorData):
             )
 
         self.p_thick = Param(
-            initialize=0.07,
+            initialize=7,
             units=pyunits.dimensionless,
             mutable=True,
-            doc="Fraction of suspended solids in the underflow",
+            doc="Percentage fraction of suspended solids in the underflow",
         )
 
         self.TSS_rem = Param(
-            initialize=0.98,
+            initialize=98,
             units=pyunits.dimensionless,
             mutable=True,
-            doc="Fraction of suspended solids removed",
+            doc="Percentage fraction of suspended solids removed",
         )
 
         @self.Expression(self.flowsheet().time, doc="Suspended solids concentration")
@@ -153,11 +153,11 @@ class ThickenerData(SeparatorData):
 
         @self.Expression(self.flowsheet().time, doc="Thickening factor")
         def f_thick(blk, t):
-            return blk.p_thick * (10 / (blk.TSS_in[t]))
+            return blk.p_thick * (10 * (pyunits.kg / pyunits.m**3) / (blk.TSS_in[t]))
 
         @self.Expression(self.flowsheet().time, doc="Remove factor")
         def f_q_du(blk, t):
-            return blk.TSS_rem / (pyunits.kg / pyunits.m**3) / 100 / blk.f_thick[t]
+            return blk.TSS_rem / 100 / blk.f_thick[t]
 
         @self.Constraint(
             self.flowsheet().time,
@@ -165,7 +165,7 @@ class ThickenerData(SeparatorData):
             doc="particulate fraction",
         )
         def overflow_particulate_fraction(blk, t, i):
-            return blk.split_fraction[t, "overflow", i] == 1 - blk.TSS_rem
+            return blk.split_fraction[t, "overflow", i] == 1 - blk.TSS_rem / 100
 
         @self.Constraint(
             self.flowsheet().time,
